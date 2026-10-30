@@ -113,10 +113,10 @@ fun LoginScreen(
             }
         }
 
-        // Identidad de marca FloraSense
+        // Identidad de marca SmartGarden
         Image(
             painter = painterResource(id = R.drawable.app_logo),
-            contentDescription = "FloraSense Logo",
+            contentDescription = "SmartGarden Logo",
             modifier = Modifier
                 .size(76.dp)
                 .clip(RoundedCornerShape(20.dp)),
@@ -128,7 +128,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "FloraSense IoT",
+                text = "SmartGarden IoT",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 26.sp,
                 color = CharcoalText,
@@ -168,7 +168,7 @@ fun LoginScreen(
                         onClearError()
                     },
                     label = { Text("Correo Electrónico") },
-                    placeholder = { Text("operador@florasense.io") },
+                    placeholder = { Text("operador@smartgarden.io") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Email,
@@ -205,7 +205,7 @@ fun LoginScreen(
                             onClearError()
                         },
                         label = { Text("Confirmar Correo Electrónico") },
-                        placeholder = { Text("operador@florasense.io") },
+                        placeholder = { Text("operador@smartgarden.io") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
@@ -442,7 +442,7 @@ fun LoginScreen(
 
                 TextButton(
                     onClick = {
-                        email = "operador@florasense.io"
+                        email = "operador@smartgarden.io"
                         password = "Flora27400!"
                         onClearError()
                     },

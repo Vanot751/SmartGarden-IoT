@@ -257,7 +257,7 @@ private fun DashboardTopHeader(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "FloraSense",
+                    contentDescription = "SmartGarden",
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp)),
@@ -265,11 +265,11 @@ private fun DashboardTopHeader(
                 )
                 Column {
                     Text(
-                        text = "FloraSense",
+                        text = "SmartGarden",
                         style = MaterialTheme.typography.headlineMedium,
                     )
                     Text(
-                        text = uiState.userEmail.ifEmpty { "operador@florasense.io" },
+                        text = uiState.userEmail.ifEmpty { "operador@smartgarden.io" },
                         style = MaterialTheme.typography.bodyMedium,
                         color = CharcoalSubtle,
                     )
