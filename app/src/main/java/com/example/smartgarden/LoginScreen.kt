@@ -1,5 +1,6 @@
 package com.example.smartgarden
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +33,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +47,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -69,7 +74,12 @@ fun LoginScreen(
     onLoginSubmit: (String, String) -> Unit,
     onRegisterSubmit: (String, String, String, String) -> Unit,
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
+    var rememberUser by rememberSaveable { mutableStateOf(prefs.getBoolean("remember_user", true)) }
+    var email by rememberSaveable {
+        mutableStateOf(if (rememberUser) prefs.getString("saved_email", "").orEmpty() else "")
+    }
     var confirmEmail by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
@@ -342,6 +352,38 @@ fun LoginScreen(
                     )
                 }
 
+                // Casilla de verificación: Recordar operador en el dispositivo
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Checkbox(
+                        checked = rememberUser,
+                        onCheckedChange = { isChecked ->
+                            rememberUser = isChecked
+                            prefs.edit().putBoolean("remember_user", isChecked).apply()
+                            if (!isChecked) {
+                                prefs.edit().remove("saved_email").apply()
+                            } else if (email.isNotEmpty()) {
+                                prefs.edit().putString("saved_email", email.trim()).apply()
+                            }
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = EmeraldActive,
+                            uncheckedColor = CharcoalSubtle,
+                            checkmarkColor = CharcoalText,
+                        ),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Recordar operador en este dispositivo",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = CharcoalText,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+
                 // Mensaje de error de validación
                 if (uiState.authError != null) {
                     Surface(
@@ -373,6 +415,18 @@ fun LoginScreen(
                 // Botón principal (Iniciar Sesión / Registrar Cuenta) en Verde Esmeralda
                 Button(
                     onClick = {
+                        if (rememberUser) {
+                            prefs.edit()
+                                .putBoolean("remember_user", true)
+                                .putString("saved_email", email.trim())
+                                .apply()
+                        } else {
+                            prefs.edit()
+                                .putBoolean("remember_user", false)
+                                .remove("saved_email")
+                                .apply()
+                        }
+
                         if (isRegisterMode) {
                             onRegisterSubmit(email, confirmEmail, password, confirmPassword)
                         } else {
@@ -444,6 +498,9 @@ fun LoginScreen(
                     onClick = {
                         email = "operador@smartgarden.io"
                         password = "Flora27400!"
+                        if (rememberUser) {
+                            prefs.edit().putString("saved_email", email).apply()
+                        }
                         onClearError()
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally),

@@ -1,5 +1,6 @@
 package com.example.smartgarden
 
+import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +49,17 @@ fun AppNavigation(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
+    val isRememberUser = remember { prefs.getBoolean("remember_user", true) }
+
+    // Redirección automática al Dashboard si la sesión Firebase Auth está activa y "Recordar usuario" está habilitado
+    LaunchedEffect(uiState.isAuthenticated) {
+        if (uiState.isAuthenticated && isRememberUser) {
+            navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+            }
+        }
+    }
 
     // Monitoreo en tiempo real de temperatura crítica para enviar notificación push local
     LaunchedEffect(uiState.temperatureCelsius) {
