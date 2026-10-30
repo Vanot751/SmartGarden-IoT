@@ -1,6 +1,6 @@
-# 🌿 FloraSense - Pasarela Segura de Monitoreo y Control Botánico
+# 🌿 SmartGarden - Pasarela Segura de Monitoreo y Control Botánico
 
-**FloraSense** es una aplicación móvil nativa para Android diseñada como pasarela de supervisión, telemetría ambiental y control remoto de actuadores para un **Jardín Inteligente Autónomo**.
+**SmartGarden** es una aplicación móvil nativa para Android diseñada como pasarela de supervisión, telemetría ambiental y control remoto de actuadores para un **Jardín Inteligente Autónomo**.
 
 El proyecto traslada al ecosistema móvil y en la nube una **arquitectura IoT de modelo emisor-receptor** originalmente instrumentada sobre dos microcontroladores **Arduino UNO (ATmega328P)** interconectados por bus serial asíncrono (`UART TX/RX`), donde:
 - **Nodo Emisor (Censor):** Adquiere de forma continua las variables analógicas críticas del cultivo (temperatura ambiente, humedad de sustrato y radiación lumínica) y empaqueta la telemetría en tramas estructuradas (`T,L,H`).
@@ -15,7 +15,7 @@ La aplicación ha sido construida siguiendo las mejores prácticas de ingenierí
 - **Lenguaje:** **Kotlin** con uso intensivo de corrutinas y flujos reactivos (`StateFlow` / `MutableStateFlow`).
 - **Patrón Arquitectónico (MVVM - Model-View-ViewModel):**
   - **Model / Estado Inmutable (`FloraSenseUiState`):** Representa una única fuente de verdad (*Single Source of Truth*) con el estado de sesión, telemetría de sensores, estado de actuadores y banderas de alerta crítica.
-  - **ViewModel (`FloraSenseViewModel`):** Orquesta la lógica de negocio, la autenticación con Firebase Auth y los *listeners* permanentes de lectura/escritura hacia Firebase Realtime Database.
+  - **ViewModel (`FloraSenseViewModel`):** Orquesta la lógica de negocio, el registro y autenticación con Firebase Auth y los *listeners* permanentes de lectura/escritura hacia Firebase Realtime Database.
   - **View (`LoginScreen`, `DashboardScreen`, `ControlPanelScreen`):** Interfaz 100% declarativa en **Jetpack Compose (Material 3)** articulada mediante **Jetpack Navigation Compose** (`AppNavigation`).
 - **Sistema de Diseño *"Pastel Minimalism"*:**
   - Diseñado para eliminar la fatiga visual mediante superficies cálidas libres de blancos puros (`#FFFFFF`).
@@ -29,7 +29,7 @@ app/src/main/java/com/example/smartgarden/
 ├── MainActivity.kt          # Punto de entrada, FloraSenseTheme y paleta Pastel Minimalism
 ├── AppNavigation.kt         # NavHost (Login, Dashboard, ControlPanel) y NavigationBar inferior
 ├── FloraSenseViewModel.kt   # Estado reactivo StateFlow + integración SDK Firebase Auth y RTDB
-├── LoginScreen.kt           # Autenticación de operador y panel de cumplimiento ISO/IEC 27400
+├── LoginScreen.kt           # Autenticación/Registro de usuario (doble confirmación) y panel ISO/IEC 27400
 ├── DashboardScreen.kt       # Chips de perfiles botánicos, tarjetas de telemetría y alertas
 └── ControlPanelScreen.kt    # Interruptores de hardware, dosificador (50/100/250ml) y E-STOP
 ```
@@ -38,7 +38,7 @@ app/src/main/java/com/example/smartgarden/
 
 ## 🌐 Interconexión IoT y Sincronización en Tiempo Real (Requisito Académico)
 
-Para cumplir con el requisito de **conectividad inalámbrica multi-dispositivo en tiempo real**, FloraSense implementa **Firebase Realtime Database** apuntando al nodo centralizado `/florasense/gardens/nodo_central_01`:
+Para cumplir con el requisito de **conectividad inalámbrica multi-dispositivo en tiempo real**, **SmartGarden** implementa **Firebase Realtime Database** apuntando al nodo centralizado `/florasense/gardens/nodo_central_01`:
 
 1. **Lectura Reactiva Permanente (`ValueEventListener`):**
    - Al inicializarse el `FloraSenseViewModel`, se registra un `addValueEventListener` permanente sobre la referencia de la base de datos.
@@ -74,12 +74,13 @@ Para cumplir con el requisito de **conectividad inalámbrica multi-dispositivo e
 
 ## 🔐 Seguridad y Cumplimiento ISO/IEC 27400
 
-El diseño de **FloraSense** aborda directamente las brechas de seguridad identificadas en sistemas IoT tradicionales de comunicación serial en texto plano, alineándose con los principios de la norma **ISO/IEC 27400 (Seguridad y Privacidad en el Internet de las Cosas)**:
+El diseño de **SmartGarden** aborda directamente las brechas de seguridad identificadas en sistemas IoT tradicionales, alineándose con los principios de la norma **ISO/IEC 27400 (Seguridad y Privacidad en el Internet de las Cosas)**:
 
 - **🔒 Confidencialidad (Mitigación de *Sniffing*):**
   - Toda la telemetría ambiental y los comandos de actuación viajan entre los dispositivos Android y los servidores de Firebase sobre canales cifrados mediante **TLS 1.3** y cifrado en reposo **AES-256-GCM**, impidiendo la interceptación en texto plano de la trama `(T,L,H)`.
 - **🛡️ Integridad y Control de Acceso (Mitigación de *Spoofing* e Inyección de Tramas):**
-  - Se integra **Firebase Authentication** (`signInWithEmailAndPassword`) como barrera obligatoria antes de acceder al Dashboard o al Panel de Control.
+  - Se integra **Firebase Authentication** (`signInWithEmailAndPassword` / `createUserWithEmailAndPassword`) como barrera obligatoria antes de acceder al Dashboard o al Panel de Control.
+  - **Doble Confirmación de Registro:** Para prevenir errores tipográficos e inyección de cuentas no deseadas, el registro de usuarios exige **doble confirmación de correo electrónico y contraseña**.
   - Solo operadores autenticados con sesión activa pueden emitir escrituras hacia `/actuadores`, evitando que actores no autorizados inyecten paquetes falsos (ej. mantener la bomba encendida indefinidamente para causar un desborde hídrico).
 - **⚡ Disponibilidad y *Fail-Safe* Operativo (Mitigación de Denegación de Servicio / Estrés Térmico):**
   - Incorpora un módulo prioritario de **`PARADA DE EMERGENCIA (E-STOP)`** que actúa como *override* manual sobre el microcontrolador, enviando una actualización atómica (`paradaEmergencia = true`, `bombaAgua = false`, `nebulizador = false`) para cortar inmediatamente la energía de los actuadores ante anomalías térmicas (`> 35°C`) o fallos hidráulicos.
@@ -91,7 +92,7 @@ El diseño de **FloraSense** aborda directamente las brechas de seguridad identi
 La aplicación modela fielmente el comportamiento electrónico del prototipo físico y sus umbrales deterministas:
 
 ### 📡 Subsistemas de Censado (Entradas Analógicas)
-| Componente Físico | Canal / Pin | Variable | Regla Lógica en FloraSense |
+| Componente Físico | Canal / Pin | Variable | Regla Lógica en SmartGarden |
 | :--- | :---: | :--- | :--- |
 | **Sensor de Temperatura `TMP36`** | `Pin A0` | Temperatura Ambiente (`°C`) | Escala lineal `10 mV/°C`. Si supera el umbral crítico (**`> 35.0°C`**), dispara alerta visual roja y activa la alarma térmica. |
 | **Fotorresistencia `LDR` (`10 kΩ`)** | `Pin A1` | Radiación Solar (`%`) | Divisor de tensión (`0V - 5V`) que monitorea el fotoperíodo según el perfil botánico (*Tropicales, Suculentas, Aromáticas*). |
@@ -115,5 +116,5 @@ La aplicación modela fielmente el comportamiento electrónico del prototipo fí
    ./gradlew :app:assembleDebug
    ```
 3. **Pruebas Multi-Dispositivo:**
-   - Inicia sesión en dos dispositivos o emuladores con una cuenta registrada en **Firebase Authentication**.
+   - Inicia sesión o registra una nueva cuenta (con doble confirmación) en dos dispositivos o emuladores con **Firebase Authentication**.
    - Modifica los sensores desde el botón **"Simular"** en el Dashboard o alterna los interruptores en **Controles Manuales** y observa cómo la telemetría y los actuadores se actualizan en tiempo real en ambos dispositivos.
