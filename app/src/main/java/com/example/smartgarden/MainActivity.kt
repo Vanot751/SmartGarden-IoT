@@ -1,9 +1,15 @@
 package com.example.smartgarden
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
@@ -13,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 
 // ============================================================================
 // PALETA DE COLORES GLOBAL: PASTEL MINIMALISM (Sin fondos blancos puros)
@@ -38,12 +45,54 @@ val EmergencyRed = Color(0xFFE74C3C)              // Rojo sólido para PARADA DE
 val EmergencySoftBg = Color(0xFFFADBD8)           // Fondo pastel rojizo para banners de advertencia
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val CHANNEL_ID = "temp_alerts_channel"
+        const val CHANNEL_NAME = "Alertas de Temperatura Smart Garden"
+    }
+
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        // Permiso de notificaciones otorgado o denegado por el usuario
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Configuración de notificaciones locales para alertas de temperatura
+        createNotificationChannel()
+        checkAndRequestNotificationPermission()
+
         setContent {
             FloraSenseTheme {
                 AppNavigation()
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
+                description = "Notificaciones de alertas de temperatura crítica para Smart Garden IoT"
+                enableVibration(true)
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
