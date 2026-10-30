@@ -1,0 +1,227 @@
+package com.example.smartgarden
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+
+/**
+ * Definición de rutas tipadas para la arquitectura de navegación de FloraSense.
+ */
+enum class FloraSenseRoute(val route: String, val label: String) {
+    LOGIN("login", "Acceso Seguro"),
+    DASHBOARD("dashboard", "Telemetría"),
+    CONTROL_PANEL("control_panel", "Actuadores"),
+}
+
+/**
+ * Sistema de navegación principal basado en Jetpack Navigation Compose y MVVM.
+ */
+@Composable
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+    viewModel: FloraSenseViewModel = viewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val showBottomBar = currentRoute == FloraSenseRoute.DASHBOARD.route ||
+        currentRoute == FloraSenseRoute.CONTROL_PANEL.route
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = PearlWarmBackground,
+        bottomBar = {
+            if (showBottomBar) {
+                FloraSenseBottomBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { targetRoute ->
+                        navController.navigate(targetRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
+            }
+        },
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = FloraSenseRoute.LOGIN.route,
+            modifier = Modifier.padding(innerPadding),
+        ) {
+            // Pantalla 1: Autenticación ISO/IEC 27400 (Firebase Auth)
+            composable(route = FloraSenseRoute.LOGIN.route) {
+                LoginScreen(
+                    uiState = uiState,
+                    onClearError = viewModel::clearAuthError,
+                    onLoginSubmit = { email, password ->
+                        viewModel.loginWithFirebase(
+                            email = email,
+                            password = password,
+                            onLoginSuccess = {
+                                navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                                    popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                                }
+                            },
+                        )
+                    },
+                    onRegisterSubmit = { email, confirmEmail, password, confirmPassword ->
+                        viewModel.registerWithFirebase(
+                            email = email,
+                            confirmEmail = confirmEmail,
+                            password = password,
+                            confirmPassword = confirmPassword,
+                            onRegisterSuccess = {
+                                navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                                    popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                                }
+                            },
+                        )
+                    },
+                )
+            }
+
+            // Pantalla 2: Dashboard de Telemetría Ambiental
+            composable(route = FloraSenseRoute.DASHBOARD.route) {
+                DashboardScreen(
+                    uiState = uiState,
+                    onSelectCategory = viewModel::selectPlantCategory,
+                    onUpdateSimulatedTelemetry = viewModel::updateSimulatedTelemetry,
+                    onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
+                    onNavigateToControls = {
+                        navController.navigate(FloraSenseRoute.CONTROL_PANEL.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onLogout = {
+                        viewModel.logout {
+                            navController.navigate(FloraSenseRoute.LOGIN.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    },
+                )
+            }
+
+            // Pantalla 3: Panel de Control de Actuadores y Parada de Emergencia
+            composable(route = FloraSenseRoute.CONTROL_PANEL.route) {
+                ControlPanelScreen(
+                    uiState = uiState,
+                    onToggleWaterPump = viewModel::setWaterPumpState,
+                    onToggleNebulizer = viewModel::setNebulizerState,
+                    onSelectDose = viewModel::selectDoseMl,
+                    onApplyIrrigationDose = viewModel::applyIrrigationDose,
+                    onTriggerEmergencyStop = viewModel::triggerEmergencyStop,
+                    onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
+                    onNavigateBackToDashboard = {
+                        navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FloraSenseBottomBar(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit,
+) {
+    NavigationBar(
+        containerColor = WarmSurfaceContainer,
+        contentColor = CharcoalText,
+        tonalElevation = 0.dp,
+    ) {
+        NavigationBarItem(
+            selected = currentRoute == FloraSenseRoute.DASHBOARD.route,
+            onClick = { onNavigate(FloraSenseRoute.DASHBOARD.route) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Dashboard,
+                    contentDescription = FloraSenseRoute.DASHBOARD.label,
+                )
+            },
+            label = {
+                Text(
+                    text = "Telemetría",
+                    fontWeight = if (currentRoute == FloraSenseRoute.DASHBOARD.route) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Medium
+                    },
+                )
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CharcoalText,
+                selectedTextColor = CharcoalText,
+                indicatorColor = EmeraldActive,
+                unselectedIconColor = CharcoalSubtle,
+                unselectedTextColor = CharcoalSubtle,
+            ),
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == FloraSenseRoute.CONTROL_PANEL.route,
+            onClick = { onNavigate(FloraSenseRoute.CONTROL_PANEL.route) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Tune,
+                    contentDescription = FloraSenseRoute.CONTROL_PANEL.label,
+                )
+            },
+            label = {
+                Text(
+                    text = "Controles Manuales",
+                    fontWeight = if (currentRoute == FloraSenseRoute.CONTROL_PANEL.route) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Medium
+                    },
+                )
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = CharcoalText,
+                selectedTextColor = CharcoalText,
+                indicatorColor = EmeraldActive,
+                unselectedIconColor = CharcoalSubtle,
+                unselectedTextColor = CharcoalSubtle,
+            ),
+        )
+    }
+}
