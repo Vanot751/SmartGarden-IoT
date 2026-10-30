@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,8 +71,8 @@ import androidx.compose.ui.unit.sp
 fun LoginScreen(
     uiState: FloraSenseUiState,
     onClearError: () -> Unit,
-    onLoginSubmit: (String, String, Boolean) -> Unit,
-    onRegisterSubmit: (String, String, String, String, Boolean) -> Unit,
+    onLoginSubmit: (String, String) -> Unit,
+    onRegisterSubmit: (String, String, String, String) -> Unit,
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
@@ -86,7 +85,6 @@ fun LoginScreen(
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var isConfirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var rememberSession by rememberSaveable { mutableStateOf(false) }
     var isRegisterMode by rememberSaveable { mutableStateOf(false) }
 
     Column(
@@ -414,33 +412,6 @@ fun LoginScreen(
                     }
                 }
 
-                // Casilla de verificación: Mantener sesión iniciada
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { rememberSession = !rememberSession }
-                        .padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Checkbox(
-                        checked = rememberSession,
-                        onCheckedChange = null,
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = EmeraldActive,
-                            uncheckedColor = CharcoalSubtle,
-                            checkmarkColor = CharcoalText,
-                        ),
-                    )
-                    Text(
-                        text = "Mantener sesión iniciada",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CharcoalText,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-
                 // Botón principal (Iniciar Sesión / Registrar Cuenta) en Verde Esmeralda
                 Button(
                     onClick = {
@@ -457,9 +428,9 @@ fun LoginScreen(
                         }
 
                         if (isRegisterMode) {
-                            onRegisterSubmit(email, confirmEmail, password, confirmPassword, rememberSession)
+                            onRegisterSubmit(email, confirmEmail, password, confirmPassword)
                         } else {
-                            onLoginSubmit(email, password, rememberSession)
+                            onLoginSubmit(email, password)
                         }
                     },
                     enabled = !uiState.isAuthenticating,

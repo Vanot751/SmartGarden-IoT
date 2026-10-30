@@ -1,9 +1,6 @@
 package com.example.smartgarden
 
-import android.app.Application
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -38,7 +35,6 @@ data class FloraSenseUiState(
     val isAuthenticating: Boolean = false,
     val userEmail: String = "",
     val authError: String? = null,
-    val rememberSession: Boolean = false,
     val isoSecurityProtocol: String = "ISO/IEC 27400 • TLS 1.3 • AES-256-GCM",
 
     // Sincronización Multi-Dispositivo (Firebase Realtime Database)
@@ -74,18 +70,7 @@ data class FloraSenseUiState(
         get() = isCriticalHeat || isLowMoisture || isEmergencyStopActive
 }
 
-class FloraSenseViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val prefs: SharedPreferences =
-        application.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE)
-
-    private fun setRememberSessionPref(remember: Boolean) {
-        prefs.edit().putBoolean("remember_session", remember).apply()
-    }
-
-    private fun getRememberSessionPref(): Boolean {
-        return prefs.getBoolean("remember_session", false)
-    }
+class FloraSenseViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(FloraSenseUiState())
     val uiState: StateFlow<FloraSenseUiState> = _uiState.asStateFlow()
@@ -168,33 +153,14 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     init {
-        // Verifica si existe sesión activa y si la opción "Mantener sesión iniciada" está marcada
-        val isRemembered = getRememberSessionPref()
+        // Verifica si ya existe una sesión activa en Firebase Auth
         val currentUser = firebaseAuth.currentUser
-
         if (currentUser != null) {
-            if (isRemembered) {
-                _uiState.update {
-                    it.copy(
-                        isAuthenticated = true,
-                        userEmail = currentUser.email.orEmpty(),
-                        rememberSession = true,
-                    )
-                }
-            } else {
-                // Si el usuario no marcó la casilla, se cierra la sesión al iniciar/abrir la app
-                firebaseAuth.signOut()
-                _uiState.update {
-                    it.copy(
-                        isAuthenticated = false,
-                        userEmail = "",
-                        rememberSession = false,
-                    )
-                }
-            }
-        } else {
             _uiState.update {
-                it.copy(rememberSession = isRemembered)
+                it.copy(
+                    isAuthenticated = true,
+                    userEmail = currentUser.email.orEmpty(),
+                )
             }
         }
 
@@ -226,7 +192,6 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
     fun loginWithFirebase(
         email: String,
         password: String,
-        rememberSession: Boolean = false,
         onLoginSuccess: () -> Unit,
     ) {
         val cleanEmail = email.trim()
@@ -250,13 +215,11 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
         firebaseAuth.signInWithEmailAndPassword(cleanEmail, password)
             .addOnSuccessListener { authResult ->
                 val authenticatedEmail = authResult.user?.email ?: cleanEmail
-                setRememberSessionPref(rememberSession)
                 _uiState.update {
                     it.copy(
                         isAuthenticated = true,
                         isAuthenticating = false,
                         userEmail = authenticatedEmail,
-                        rememberSession = rememberSession,
                         authError = null,
                         statusLogMessage = "Sesión Firebase Auth activa ($authenticatedEmail)",
                     )
@@ -280,7 +243,6 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
         confirmEmail: String,
         password: String,
         confirmPassword: String,
-        rememberSession: Boolean = false,
         onRegisterSuccess: () -> Unit,
     ) {
         val cleanEmail = email.trim()
@@ -317,13 +279,11 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
         firebaseAuth.createUserWithEmailAndPassword(cleanEmail, password)
             .addOnSuccessListener { authResult ->
                 val authenticatedEmail = authResult.user?.email ?: cleanEmail
-                setRememberSessionPref(rememberSession)
                 _uiState.update {
                     it.copy(
                         isAuthenticated = true,
                         isAuthenticating = false,
                         userEmail = authenticatedEmail,
-                        rememberSession = rememberSession,
                         authError = null,
                         statusLogMessage = "Cuenta registrada y sesión activa ($authenticatedEmail)",
                     )
@@ -348,12 +308,10 @@ class FloraSenseViewModel(application: Application) : AndroidViewModel(applicati
 
     fun logout(onLoggedOut: () -> Unit) {
         firebaseAuth.signOut()
-        setRememberSessionPref(false)
         _uiState.update {
             it.copy(
                 isAuthenticated = false,
                 userEmail = "",
-                rememberSession = false,
                 authError = null,
                 statusLogMessage = "Sesión cerrada en Firebase Authentication",
             )

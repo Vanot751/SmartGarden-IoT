@@ -104,11 +104,10 @@ fun AppNavigation(
                 LoginScreen(
                     uiState = uiState,
                     onClearError = viewModel::clearAuthError,
-                    onLoginSubmit = { email, password, rememberSession ->
+                    onLoginSubmit = { email, password ->
                         viewModel.loginWithFirebase(
                             email = email,
                             password = password,
-                            rememberSession = rememberSession,
                             onLoginSuccess = {
                                 navController.navigate(FloraSenseRoute.DASHBOARD.route) {
                                     popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
@@ -116,13 +115,12 @@ fun AppNavigation(
                             },
                         )
                     },
-                    onRegisterSubmit = { email, confirmEmail, password, confirmPassword, rememberSession ->
+                    onRegisterSubmit = { email, confirmEmail, password, confirmPassword ->
                         viewModel.registerWithFirebase(
                             email = email,
                             confirmEmail = confirmEmail,
                             password = password,
                             confirmPassword = confirmPassword,
-                            rememberSession = rememberSession,
                             onRegisterSuccess = {
                                 navController.navigate(FloraSenseRoute.DASHBOARD.route) {
                                     popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
