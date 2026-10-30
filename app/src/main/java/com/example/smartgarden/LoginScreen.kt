@@ -1,6 +1,7 @@
 package com.example.smartgarden
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -111,20 +114,14 @@ fun LoginScreen(
         }
 
         // Identidad de marca FloraSense
-        Box(
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription = "FloraSense Logo",
             modifier = Modifier
-                .size(68.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(EmeraldActive),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Eco,
-                contentDescription = "FloraSense Logo",
-                tint = CharcoalText,
-                modifier = Modifier.size(38.dp),
-            )
-        }
+                .size(76.dp)
+                .clip(RoundedCornerShape(20.dp)),
+            contentScale = ContentScale.Crop,
+        )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
