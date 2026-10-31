@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 object NotificationHelper {
 
     private const val NOTIFICATION_ID_TEMP = 1001
+    private const val NOTIFICATION_ID_MOISTURE = 1002
 
     @SuppressLint("MissingPermission")
     fun sendTemperatureAlert(context: Context, tempCelsius: Float) {
@@ -43,6 +44,35 @@ object NotificationHelper {
 
         with(NotificationManagerCompat.from(context)) {
             notify(NOTIFICATION_ID_TEMP, builder.build())
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun sendMoistureAlert(context: Context, moisturePercent: Int, minThresholdPercent: Int = 30) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+        }
+
+        val builder = NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentTitle("💧 Alerta Crítica de Humedad del Suelo")
+            .setContentText("La humedad del suelo bajó al $moisturePercent% (Mínimo: $minThresholdPercent%).")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("¡Atención FloraSense! La humedad del suelo ha descendido al $moisturePercent% (debajo del umbral óptimo de $minThresholdPercent%). Se recomienda activar la bomba de agua o aplicar dosis de riego.")
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setAutoCancel(true)
+
+        with(NotificationManagerCompat.from(context)) {
+            notify(NOTIFICATION_ID_MOISTURE, builder.build())
         }
     }
 }

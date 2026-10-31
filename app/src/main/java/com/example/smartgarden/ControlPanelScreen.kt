@@ -90,8 +90,9 @@ fun ControlPanelScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 IconButton(onClick = onNavigateBackToDashboard) {
                     Icon(
@@ -100,22 +101,30 @@ fun ControlPanelScreen(
                         tint = CharcoalText,
                     )
                 }
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Controles Manuales",
                         style = MaterialTheme.typography.headlineMedium,
+                        maxLines = 1,
                     )
                     Text(
-                        text = "Actuadores Arduino UNO • Sincronización RTDB",
+                        text = "Actuadores • Arduino UNO",
                         style = MaterialTheme.typography.bodyMedium,
                         color = CharcoalSubtle,
+                        maxLines = 1,
                     )
                 }
             }
 
+            Spacer(modifier = Modifier.width(6.dp))
+
             Surface(
                 color = if (uiState.isEmergencyStopActive) EmergencySoftBg else EmeraldSoftBg,
                 shape = RoundedCornerShape(50),
+                border = BorderStroke(
+                    1.dp,
+                    if (uiState.isEmergencyStopActive) EmergencyRed.copy(alpha = 0.3f) else EmeraldActive.copy(alpha = 0.3f)
+                ),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -124,7 +133,7 @@ fun ControlPanelScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(7.dp)
                             .clip(CircleShape)
                             .background(if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive),
                     )
@@ -132,6 +141,10 @@ fun ControlPanelScreen(
                         text = if (uiState.isEmergencyStopActive) "BLOQUEADO" else "RTDB ACTIVO",
                         style = MaterialTheme.typography.labelSmall,
                         color = CharcoalText,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 }
             }
@@ -477,23 +490,35 @@ fun ControlPanelScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Icon(
-                        imageVector = if (uiState.isEmergencyStopActive) {
-                            Icons.Default.Warning
-                        } else {
-                            Icons.Default.CheckCircle
-                        },
-                        contentDescription = null,
-                        tint = if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Column {
-                        Text(
-                            text = uiState.statusLogMessage,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = CharcoalText,
-                        )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Surface(
+                            color = if (uiState.isEmergencyStopActive) EmergencySoftBg else EmeraldSoftBg,
+                            shape = RoundedCornerShape(50),
+                            border = BorderStroke(
+                                1.dp,
+                                if (uiState.isEmergencyStopActive) EmergencyRed.copy(alpha = 0.3f) else EmeraldActive.copy(alpha = 0.3f)
+                            ),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive)
+                                )
+                                Text(
+                                    text = uiState.statusLogMessage,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = CharcoalText,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
                         Text(
                             text = "Nodo RTDB: ${uiState.firebaseNodePath}",
                             style = MaterialTheme.typography.bodyMedium,

@@ -57,7 +57,7 @@ data class FloraSenseUiState(
     val isNebulizerOn: Boolean = false,
     val selectedDoseMl: Int = 100, // Opciones: 50, 100, 250
     val isEmergencyStopActive: Boolean = false,
-    val statusLogMessage: String = "Conectando con Firebase Realtime Database...",
+    val statusLogMessage: String = "RTDB: Conectando...",
 ) {
     // Reglas de negocio deterministas del prototipo IoT
     val isCriticalHeat: Boolean
@@ -121,10 +121,10 @@ class FloraSenseViewModel : ViewModel() {
                     ?: current.selectedDoseMl
 
                 val statusText = when {
-                    emergencyStopState -> "PARADA DE EMERGENCIA ACTIVA en Firebase RTDB"
-                    tempValue > 35.0 -> "¡ALERTA CRÍTICA RTDB! Temperatura > 35°C (${tempValue.toFloat()}°C)"
-                    moistureValue < 30 -> "⚠ Alerta RTDB: Humedad crítica ($moistureValue% < 30%)"
-                    else -> "Sincronizado en tiempo real con Firebase RTDB"
+                    emergencyStopState -> "RTDB: Parada de Emergencia"
+                    tempValue > 35.0 -> String.format(java.util.Locale.US, "RTDB: Alerta Térmica (%.1f°C)", tempValue.toFloat())
+                    moistureValue < 30 -> "RTDB: Humedad Crítica ($moistureValue%)"
+                    else -> "RTDB: Conectado en Tiempo Real"
                 }
 
                 current.copy(

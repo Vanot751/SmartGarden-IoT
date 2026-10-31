@@ -645,21 +645,33 @@ private fun FirebaseSyncFooterCard(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            Surface(
+                color = if (uiState.isEmergencyStopActive) EmergencySoftBg else EmeraldSoftBg,
+                shape = RoundedCornerShape(50),
+                border = BorderStroke(
+                    1.dp,
+                    if (uiState.isEmergencyStopActive) EmergencyRed.copy(alpha = 0.3f) else EmeraldActive.copy(alpha = 0.3f)
+                ),
             ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = EmeraldActive,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    text = uiState.statusLogMessage,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CharcoalText,
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive)
+                    )
+                    Text(
+                        text = uiState.statusLogMessage,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CharcoalText,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
             Text(
                 text = "Origen último paquete: ${uiState.lastSyncSource}",
