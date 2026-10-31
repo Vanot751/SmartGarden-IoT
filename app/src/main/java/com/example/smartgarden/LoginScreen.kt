@@ -22,6 +22,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -52,6 +55,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -73,6 +77,7 @@ fun LoginScreen(
     onClearError: () -> Unit,
     onLoginSubmit: (String, String) -> Unit,
     onRegisterSubmit: (String, String, String, String) -> Unit,
+    onToggleDarkMode: () -> Unit,
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
@@ -96,29 +101,43 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Insignia superior de estándar de ciberseguridad IoT ISO/IEC 27400
-        Surface(
-            color = EmeraldSoftBg,
-            shape = RoundedCornerShape(50),
-            border = BorderStroke(1.dp, EmeraldActive.copy(alpha = 0.5f)),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            // Insignia superior de estándar de ciberseguridad IoT ISO/IEC 27400
+            Surface(
+                color = EmeraldSoftBg,
+                shape = RoundedCornerShape(50),
+                border = BorderStroke(1.dp, EmeraldActive.copy(alpha = 0.5f)),
             ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = "Seguridad ISO 27400",
+                        tint = CharcoalText,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = uiState.isoSecurityProtocol,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CharcoalText,
+                    )
+                }
+            }
+
+            // Botón conmutador Sol/Luna para Modo Oscuro OLED
+            IconButton(onClick = onToggleDarkMode) {
                 Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = "Seguridad ISO 27400",
-                    tint = CharcoalText,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    text = uiState.isoSecurityProtocol,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = CharcoalText,
+                    imageVector = if (uiState.isDarkMode) Icons.Default.WbSunny else Icons.Default.Bedtime,
+                    contentDescription = if (uiState.isDarkMode) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro OLED",
+                    tint = if (uiState.isDarkMode) Color(0xFFFACC15) else CharcoalText,
+                    modifier = Modifier.size(22.dp),
                 )
             }
         }

@@ -23,11 +23,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -71,6 +73,7 @@ fun ControlPanelScreen(
     onTriggerEmergencyStop: () -> Unit,
     onSimulateSecondDevice: () -> Unit,
     onNavigateBackToDashboard: () -> Unit,
+    onToggleDarkMode: () -> Unit,
 ) {
     val irrigationOptions = listOf(50, 100, 250)
     var isDoseMenuExpanded by remember { mutableStateOf(false) }
@@ -116,36 +119,49 @@ fun ControlPanelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Surface(
-                color = if (uiState.isEmergencyStopActive) EmergencySoftBg else EmeraldSoftBg,
-                shape = RoundedCornerShape(50),
-                border = BorderStroke(
-                    1.dp,
-                    if (uiState.isEmergencyStopActive) EmergencyRed.copy(alpha = 0.3f) else EmeraldActive.copy(alpha = 0.3f)
-                ),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                // Botón Conmutador Sol/Luna para Modo Oscuro OLED
+                IconButton(onClick = onToggleDarkMode) {
+                    Icon(
+                        imageVector = if (uiState.isDarkMode) Icons.Default.WbSunny else Icons.Default.Bedtime,
+                        contentDescription = if (uiState.isDarkMode) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro OLED",
+                        tint = if (uiState.isDarkMode) Color(0xFFFACC15) else CharcoalText,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+
+                Surface(
+                    color = if (uiState.isEmergencyStopActive) EmergencySoftBg else EmeraldSoftBg,
+                    shape = RoundedCornerShape(50),
+                    border = BorderStroke(
+                        1.dp,
+                        if (uiState.isEmergencyStopActive) EmergencyRed.copy(alpha = 0.3f) else EmeraldActive.copy(alpha = 0.3f)
+                    ),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive),
-                    )
-                    Text(
-                        text = if (uiState.isEmergencyStopActive) "BLOQUEADO" else "RTDB ACTIVO",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = CharcoalText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(if (uiState.isEmergencyStopActive) EmergencyRed else EmeraldActive),
+                        )
+                        Text(
+                            text = if (uiState.isEmergencyStopActive) "BLOQUEADO" else "RTDB ACTIVO",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = CharcoalText,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
                 }
             }
         }

@@ -35,6 +35,7 @@ data class FloraSenseUiState(
     val isAuthenticating: Boolean = false,
     val userEmail: String = "",
     val authError: String? = null,
+    val isDarkMode: Boolean = false,
     val isoSecurityProtocol: String = "ISO/IEC 27400 • TLS 1.3 • AES-256-GCM",
 
     // Sincronización Multi-Dispositivo (Firebase Realtime Database)
@@ -384,6 +385,12 @@ class FloraSenseViewModel : ViewModel() {
             "sensores/humedadSuelo" to updatedMoisture,
         )
         databaseRef.updateChildren(updates)
+    }
+
+    fun toggleDarkMode() {
+        _uiState.update { current ->
+            current.copy(isDarkMode = !current.isDarkMode)
+        }
     }
 
     // ========================================================================

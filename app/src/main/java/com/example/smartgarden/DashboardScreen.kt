@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Eco
@@ -73,6 +74,7 @@ fun DashboardScreen(
     onSimulateSecondDevice: () -> Unit,
     onNavigateToControls: () -> Unit,
     onLogout: () -> Unit,
+    onToggleDarkMode: () -> Unit,
 ) {
     var showSimulator by remember { mutableStateOf(false) }
 
@@ -96,6 +98,7 @@ fun DashboardScreen(
                 onToggleSimulator = { showSimulator = !showSimulator },
                 onSimulateSecondDevice = onSimulateSecondDevice,
                 onLogout = onLogout,
+                onToggleDarkMode = onToggleDarkMode,
             )
 
             // Panel opcional para simular lecturas del Arduino UNO (TMP36, Higrómetro, LDR)
@@ -243,6 +246,7 @@ private fun DashboardTopHeader(
     onToggleSimulator: () -> Unit,
     onSimulateSecondDevice: () -> Unit,
     onLogout: () -> Unit,
+    onToggleDarkMode: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -278,8 +282,18 @@ private fun DashboardTopHeader(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                // Botón Conmutador Sol/Luna para Modo Oscuro OLED
+                IconButton(onClick = onToggleDarkMode) {
+                    Icon(
+                        imageVector = if (uiState.isDarkMode) Icons.Default.WbSunny else Icons.Default.Bedtime,
+                        contentDescription = if (uiState.isDarkMode) "Cambiar a Modo Claro" else "Cambiar a Modo Oscuro OLED",
+                        tint = if (uiState.isDarkMode) Color(0xFFFACC15) else CharcoalText,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+
                 Surface(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))

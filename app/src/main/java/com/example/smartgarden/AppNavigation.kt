@@ -52,139 +52,144 @@ fun AppNavigation(
     val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
     val isRememberUser = remember { prefs.getBoolean("remember_user", true) }
 
-    // Redirección automática al Dashboard si la sesión Firebase Auth está activa y "Recordar usuario" está habilitado
-    LaunchedEffect(uiState.isAuthenticated) {
-        if (uiState.isAuthenticated && isRememberUser) {
-            navController.navigate(FloraSenseRoute.DASHBOARD.route) {
-                popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+    FloraSenseTheme(isDarkMode = uiState.isDarkMode) {
+        // Redirección automática al Dashboard si la sesión Firebase Auth está activa y "Recordar usuario" está habilitado
+        LaunchedEffect(uiState.isAuthenticated) {
+            if (uiState.isAuthenticated && isRememberUser) {
+                navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                    popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                }
             }
         }
-    }
 
-    // Monitoreo en tiempo real de temperatura y humedad crítica para notificaciones push locales
-    LaunchedEffect(uiState.temperatureCelsius, uiState.soilMoisturePercent, uiState.selectedCategory) {
-        if (uiState.isCriticalHeat) {
-            NotificationHelper.sendTemperatureAlert(context, uiState.temperatureCelsius)
-        }
-        val minMoistureThreshold = uiState.selectedCategory.minMoistureThreshold
-        if (uiState.soilMoisturePercent < minMoistureThreshold) {
-            NotificationHelper.sendMoistureAlert(
-                context = context,
-                moisturePercent = uiState.soilMoisturePercent,
-                minThresholdPercent = minMoistureThreshold,
-            )
-        }
-    }
-
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    val showBottomBar = currentRoute == FloraSenseRoute.DASHBOARD.route ||
-        currentRoute == FloraSenseRoute.CONTROL_PANEL.route
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = PearlWarmBackground,
-        bottomBar = {
-            if (showBottomBar) {
-                FloraSenseBottomBar(
-                    currentRoute = currentRoute,
-                    onNavigate = { targetRoute ->
-                        navController.navigate(targetRoute) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
+        // Monitoreo en tiempo real de temperatura y humedad crítica para notificaciones push locales
+        LaunchedEffect(uiState.temperatureCelsius, uiState.soilMoisturePercent, uiState.selectedCategory) {
+            if (uiState.isCriticalHeat) {
+                NotificationHelper.sendTemperatureAlert(context, uiState.temperatureCelsius)
+            }
+            val minMoistureThreshold = uiState.selectedCategory.minMoistureThreshold
+            if (uiState.soilMoisturePercent < minMoistureThreshold) {
+                NotificationHelper.sendMoistureAlert(
+                    context = context,
+                    moisturePercent = uiState.soilMoisturePercent,
+                    minThresholdPercent = minMoistureThreshold,
                 )
             }
-        },
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = FloraSenseRoute.LOGIN.route,
-            modifier = Modifier.padding(innerPadding),
-        ) {
-            // Pantalla 1: Autenticación ISO/IEC 27400 (Firebase Auth)
-            composable(route = FloraSenseRoute.LOGIN.route) {
-                LoginScreen(
-                    uiState = uiState,
-                    onClearError = viewModel::clearAuthError,
-                    onLoginSubmit = { email, password ->
-                        viewModel.loginWithFirebase(
-                            email = email,
-                            password = password,
-                            onLoginSuccess = {
-                                navController.navigate(FloraSenseRoute.DASHBOARD.route) {
-                                    popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+        }
+
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        val showBottomBar = currentRoute == FloraSenseRoute.DASHBOARD.route ||
+            currentRoute == FloraSenseRoute.CONTROL_PANEL.route
+
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            containerColor = PearlWarmBackground,
+            bottomBar = {
+                if (showBottomBar) {
+                    FloraSenseBottomBar(
+                        currentRoute = currentRoute,
+                        onNavigate = { targetRoute ->
+                            navController.navigate(targetRoute) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
-                            },
-                        )
-                    },
-                    onRegisterSubmit = { email, confirmEmail, password, confirmPassword ->
-                        viewModel.registerWithFirebase(
-                            email = email,
-                            confirmEmail = confirmEmail,
-                            password = password,
-                            confirmPassword = confirmPassword,
-                            onRegisterSuccess = {
-                                navController.navigate(FloraSenseRoute.DASHBOARD.route) {
-                                    popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
+                }
+            },
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = FloraSenseRoute.LOGIN.route,
+                modifier = Modifier.padding(innerPadding),
+            ) {
+                // Pantalla 1: Autenticación ISO/IEC 27400 (Firebase Auth)
+                composable(route = FloraSenseRoute.LOGIN.route) {
+                    LoginScreen(
+                        uiState = uiState,
+                        onClearError = viewModel::clearAuthError,
+                        onLoginSubmit = { email, password ->
+                            viewModel.loginWithFirebase(
+                                email = email,
+                                password = password,
+                                onLoginSuccess = {
+                                    navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                                        popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                                    }
+                                },
+                            )
+                        },
+                        onRegisterSubmit = { email, confirmEmail, password, confirmPassword ->
+                            viewModel.registerWithFirebase(
+                                email = email,
+                                confirmEmail = confirmEmail,
+                                password = password,
+                                confirmPassword = confirmPassword,
+                                onRegisterSuccess = {
+                                    navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                                        popUpTo(FloraSenseRoute.LOGIN.route) { inclusive = true }
+                                    }
+                                },
+                            )
+                        },
+                        onToggleDarkMode = viewModel::toggleDarkMode,
+                    )
+                }
+
+                // Pantalla 2: Dashboard de Telemetría Ambiental
+                composable(route = FloraSenseRoute.DASHBOARD.route) {
+                    DashboardScreen(
+                        uiState = uiState,
+                        onSelectCategory = viewModel::selectPlantCategory,
+                        onUpdateSimulatedTelemetry = viewModel::updateSimulatedTelemetry,
+                        onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
+                        onNavigateToControls = {
+                            navController.navigate(FloraSenseRoute.CONTROL_PANEL.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
-                            },
-                        )
-                    },
-                )
-            }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onLogout = {
+                            viewModel.logout {
+                                navController.navigate(FloraSenseRoute.LOGIN.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        },
+                        onToggleDarkMode = viewModel::toggleDarkMode,
+                    )
+                }
 
-            // Pantalla 2: Dashboard de Telemetría Ambiental
-            composable(route = FloraSenseRoute.DASHBOARD.route) {
-                DashboardScreen(
-                    uiState = uiState,
-                    onSelectCategory = viewModel::selectPlantCategory,
-                    onUpdateSimulatedTelemetry = viewModel::updateSimulatedTelemetry,
-                    onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
-                    onNavigateToControls = {
-                        navController.navigate(FloraSenseRoute.CONTROL_PANEL.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                // Pantalla 3: Panel de Control de Actuadores y Parada de Emergencia
+                composable(route = FloraSenseRoute.CONTROL_PANEL.route) {
+                    ControlPanelScreen(
+                        uiState = uiState,
+                        onToggleWaterPump = viewModel::setWaterPumpState,
+                        onToggleNebulizer = viewModel::setNebulizerState,
+                        onSelectDose = viewModel::selectDoseMl,
+                        onApplyIrrigationDose = viewModel::applyIrrigationDose,
+                        onTriggerEmergencyStop = viewModel::triggerEmergencyStop,
+                        onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
+                        onNavigateBackToDashboard = {
+                            navController.navigate(FloraSenseRoute.DASHBOARD.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onLogout = {
-                        viewModel.logout {
-                            navController.navigate(FloraSenseRoute.LOGIN.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
-                    },
-                )
-            }
-
-            // Pantalla 3: Panel de Control de Actuadores y Parada de Emergencia
-            composable(route = FloraSenseRoute.CONTROL_PANEL.route) {
-                ControlPanelScreen(
-                    uiState = uiState,
-                    onToggleWaterPump = viewModel::setWaterPumpState,
-                    onToggleNebulizer = viewModel::setNebulizerState,
-                    onSelectDose = viewModel::selectDoseMl,
-                    onApplyIrrigationDose = viewModel::applyIrrigationDose,
-                    onTriggerEmergencyStop = viewModel::triggerEmergencyStop,
-                    onSimulateSecondDevice = viewModel::simulateSecondDeviceSync,
-                    onNavigateBackToDashboard = {
-                        navController.navigate(FloraSenseRoute.DASHBOARD.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                )
+                        },
+                        onToggleDarkMode = viewModel::toggleDarkMode,
+                    )
+                }
             }
         }
     }
