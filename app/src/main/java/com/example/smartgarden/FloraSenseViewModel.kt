@@ -50,8 +50,8 @@ data class FloraSenseUiState(
     val selectedCategory: PlantCategory = PlantCategory.TODAS,
 
     // Telemetría Ambiental en Tiempo Real (Trama T,L,H)
-    val temperatureCelsius: Float = 26.4f,
-    val soilMoisturePercent: Int = 28,
+    val temperatureCelsius: Float = 24.0f,
+    val soilMoisturePercent: Int = 50,
     val sunlightPercent: Int = 78,
 
     // Estado de Actuadores y Dosificación (Panel de Control)

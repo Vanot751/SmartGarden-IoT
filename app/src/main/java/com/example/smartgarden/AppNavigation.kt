@@ -71,17 +71,20 @@ fun AppNavigation(
         }
 
         // Monitoreo en tiempo real de temperatura y humedad crítica para notificaciones push locales
-        LaunchedEffect(uiState.temperatureCelsius, uiState.soilMoisturePercent, uiState.selectedCategory) {
-            if (uiState.isCriticalHeat) {
-                NotificationHelper.sendTemperatureAlert(context, uiState.temperatureCelsius)
-            }
-            val minMoistureThreshold = uiState.selectedCategory.minMoistureThreshold
-            if (uiState.soilMoisturePercent < minMoistureThreshold) {
-                NotificationHelper.sendMoistureAlert(
-                    context = context,
-                    moisturePercent = uiState.soilMoisturePercent,
-                    minThresholdPercent = minMoistureThreshold,
-                )
+        LaunchedEffect(uiState.isRealtimeConnected, uiState.temperatureCelsius, uiState.soilMoisturePercent, uiState.selectedCategory) {
+            // Solo evaluar notificaciones cuando la conexión con Firebase RTDB esté activa y sincronizada
+            if (uiState.isRealtimeConnected) {
+                if (uiState.isCriticalHeat) {
+                    NotificationHelper.sendTemperatureAlert(context, uiState.temperatureCelsius)
+                }
+                val minMoistureThreshold = uiState.selectedCategory.minMoistureThreshold
+                if (uiState.soilMoisturePercent < minMoistureThreshold) {
+                    NotificationHelper.sendMoistureAlert(
+                        context = context,
+                        moisturePercent = uiState.soilMoisturePercent,
+                        minThresholdPercent = minMoistureThreshold,
+                    )
+                }
             }
         }
 
