@@ -51,6 +51,14 @@ fun AppNavigation(
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE) }
     val isRememberUser = remember { prefs.getBoolean("remember_user", true) }
+    val isSavedDarkMode = remember { prefs.getBoolean("is_dark_mode", false) }
+
+    // Restaurar el Modo Oscuro OLED guardado en las preferencias del dispositivo
+    LaunchedEffect(Unit) {
+        if (isSavedDarkMode) {
+            viewModel.setDarkMode(true)
+        }
+    }
 
     FloraSenseTheme(isDarkMode = uiState.isDarkMode) {
         // Redirección automática al Dashboard si la sesión Firebase Auth está activa y "Recordar usuario" está habilitado
@@ -137,7 +145,7 @@ fun AppNavigation(
                                 },
                             )
                         },
-                        onToggleDarkMode = viewModel::toggleDarkMode,
+                        onToggleDarkMode = { viewModel.toggleDarkMode(context) },
                     )
                 }
 
@@ -164,7 +172,7 @@ fun AppNavigation(
                                 }
                             }
                         },
-                        onToggleDarkMode = viewModel::toggleDarkMode,
+                        onToggleDarkMode = { viewModel.toggleDarkMode(context) },
                     )
                 }
 
@@ -187,7 +195,7 @@ fun AppNavigation(
                                 restoreState = true
                             }
                         },
-                        onToggleDarkMode = viewModel::toggleDarkMode,
+                        onToggleDarkMode = { viewModel.toggleDarkMode(context) },
                     )
                 }
             }

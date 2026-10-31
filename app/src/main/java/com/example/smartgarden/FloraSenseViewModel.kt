@@ -1,5 +1,6 @@
 package com.example.smartgarden
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -387,9 +388,20 @@ class FloraSenseViewModel : ViewModel() {
         databaseRef.updateChildren(updates)
     }
 
-    fun toggleDarkMode() {
+    fun setDarkMode(enabled: Boolean) {
         _uiState.update { current ->
-            current.copy(isDarkMode = !current.isDarkMode)
+            current.copy(isDarkMode = enabled)
+        }
+    }
+
+    fun toggleDarkMode(context: Context) {
+        val newMode = !_uiState.value.isDarkMode
+        context.getSharedPreferences("smartgarden_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("is_dark_mode", newMode)
+            .apply()
+        _uiState.update { current ->
+            current.copy(isDarkMode = newMode)
         }
     }
 
